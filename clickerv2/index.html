@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlebLox Clicker: Оверлорд Арена & Стабильный Топ-1000</title>
+    <style>
+        :root {
+            --bg-color: #0d0202;
+            --panel-bg: rgba(20, 5, 5, 0.9);
+            --text-color: #f5f3f4;
+            --accent: #ff3700;
+            --btn-bg: #ba181b;
+            --btn-hover: #ff5722;
+            --border: rgba(255, 55, 0, 0.3);
+            --bg-effect: radial-gradient(circle at 50% 100%, #3a0000 0%, #0d0202 70%);
+            --card-bg: rgba(0,0,0,0.25);
+            --card-border: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f1f5f9;
+            --panel-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #0f172a;
+            --accent: #3b82f6;
+            --btn-bg: #4f46e5;
+            --btn-hover: #4338ca;
+            --border: rgba(79, 70, 229, 0.2);
+            --bg-effect: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --card-bg: rgba(0, 0, 0, 0.05);
+            --card-border: rgba(0, 0, 0, 0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { 
+            min-height: 100vh; background: var(--bg-effect); color: var(--text-color); 
+            display: flex; flex-direction: column; align-items: center; padding: 20px; 
+            overflow-x: hidden; position: relative; transition: background 0.5s ease, color 0.5s ease;
+        }
+        
+        header { width: 100%; max-width: 1250px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--panel-bg); padding: 15px 25px; border-radius: 16px; border: 1px solid var(--border); backdrop-filter: blur(12px); }
+        .currency-bar { display: flex; gap: 20px; font-weight: bold; font-size: 1.1rem; }
+        
+        .game-grid { display: grid; grid-template-columns: 1fr 1.6fr; gap: 20px; width: 100%; max-width: 1250px; }
+        @media (max-width: 950px) { .game-grid { grid-template-columns: 1fr; } }
+
+        .panel, header, .card, .nav-btn, .action-btn { 
+            transition: background-color 0.5s ease, border-color 0.5s ease, color 0.5s ease, transform 0.2s ease; 
+        }
+
+        .panel { background: var(--panel-bg); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
+        
+        .click-area { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        
+        .main-btn { width: 180px; height: 180px; border-radius: 50%; border: 5px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, var(--btn-bg), var(--btn-hover)); color: white; font-size: 1.7rem; font-weight: bold; cursor: pointer; margin: 15px 0; box-shadow: 0 12px 24px rgba(255,55,0,0.3); transition: transform 0.05s; user-select: none; }
+        .main-btn:active { transform: scale(0.93); }
+
+        .navigation { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px; }
+        .nav-btn { padding: 10px 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--text-color); cursor: pointer; border-radius: 8px; font-weight: bold; flex: 1; font-size: 0.85rem; }
+        .nav-btn.active { background: var(--btn-bg); color: white; border-color: var(--btn-bg); }
+
+        .tab-layer { display: none; max-height: 650px; overflow-y: auto; padding-right: 5px; }
+        .tab-layer.active { display: block; }
+
+        .card { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 12px 16px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--card-border); }
+        .action-btn { padding: 8px 14px; background: var(--btn-bg); border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+        .action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* ЭФФЕКТЫ СТИЛЕЙ НИКНЕЙМА */
+        .color-default { color: #f5f3f4 !important; text-shadow: none !important; }
+        .color-yellow { color: #f1c40f !important; font-weight: bold; }
+        .color-orange { color: #e67e22 !important; font-weight: bold; }
+        .color-neon-red { color: #ff0055 !important; font-weight: bold; text-shadow: 0 0 10px #ff0055; }
+        .color-acid-green { color: #39ff14 !important; font-weight: bold; text-shadow: 0 0 10px #39ff14; }
+        .color-cyber-purple { color: #bc13fe !important; font-weight: bold; text-shadow: 0 0 12px #bc13fe; }
+        
+        .color-yinyang { background: linear-gradient(to right, #ffffff 0%, #000000 50%, #ffffff 100%) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; font-weight: bold; text-shadow: 0 0 5px rgba(255,255,255,0.5); background: 200% auto !important; animation: yinyangMove 4s linear infinite !important; display: inline-block; }
+        @keyframes yinyangMove { 0% { background-position: 0% center; } 100% { background-position: 200% center; } }
+        
+        .color-catrainbow { background: linear-gradient(to right, #ff3333, #ff00ff, #3399ff, #33cc33, #ff9900, #ff3333) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; font-weight: bold; background-size: 200% auto !important; animation: catAnime 2.5s linear infinite !important; display: inline-block; }
+        @keyframes catAnime { 0% { background-position: 0% center; } 100% { background-position: 200% center; } }
+
+        .color-moonlight { background: linear-gradient(135deg, #b0c4de, #4682b4, #e6e6fa) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; font-weight: bold; text-shadow: 0 0 8px rgba(70, 130, 180, 0.6); background-size: 200% auto; animation: yinyangMove 3s ease infinite; display: inline-block; }
+        .color-nightrise { background: linear-gradient(to right, #0f0c20, #3b0066, #ff007f, #3b0066) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; font-weight: bold; text-shadow: 0 0 10px rgba(255, 0, 127, 0.5); background-size: 200% auto; animation: yinyangMove 5s linear infinite; display: inline-block; }
+        .color-kirovplasma { background: linear-gradient(to right, #00ffff, #ff0055, #9b59b6, #00ffff) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; font-weight: bold; text-shadow: 0 0 14px #00ffff; background-size: 200% auto; animation: yinyangMove 2s linear infinite; display: inline-block; }
+        .color-admin { background: linear-gradient(to right, #ff3300, #ff0000, #8b0000, #ff3300) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; font-weight: bold; text-shadow: 0 0 15px rgba(255, 51, 0, 0.6); background-size: 200% auto; animation: yinyangMove 3s linear infinite; display: inline-block; }
+
+        .color-sunset { background: linear-gradient(to right, #ff5e62, #ff9966) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; font-weight: bold; display: inline-block; }
+        .color-emerald { color: #50fa7b !important; font-weight: bold; text-shadow: 0 0 15px #50fa7b; }
+        .color-rgb { background: linear-gradient(to right, #ff3333, #ff9900, #33cc33, #3399ff, #cc33ff) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; font-weight: bold; animation: rgbAnime 3s linear infinite !important; display: inline-block; }
+        @keyframes rgbAnime { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+
+        .elite-title-container { display: inline-block; padding: 4px 10px; border-radius: 8px; background: rgba(0, 0, 0, 0.6); position: relative; z-index: 1; margin-top: 5px; }
+        .elite-title-container::before { content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px; background: linear-gradient(45deg, #ff0055, #00ffaa, #00bcff, #ff00ff); border-radius: 9px; z-index: -1; animation: borderRotate 4s linear infinite; }
+        @keyframes borderRotate { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+
+        .leader-table-wrapper { max-height: 500px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; scrollbar-width: thin; }
+        .leader-table { width: 100%; border-collapse: collapse; }
+        .leader-table th, .leader-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem; }
+        .leader-table tr.top0-row { background: rgba(0, 255, 255, 0.12) !important; border: 2px dashed #00ffff; }
+        .leader-table tr.top1-row { background: rgba(241,196,15,0.15) !important; border: 2px solid #f1c40f; }
+        .leader-table tr.top2-row { background: rgba(186, 24, 27, 0.15); }
+        .leader-table tr.top3-row { background: rgba(155, 89, 182, 0.15); }
+        .leader-table tr.player-row { background: rgba(52, 152, 219, 0.25); border: 2px dashed #3498db; }
+        .leader-table tr.separator-row { background: rgba(255,255,255,0.05); text-align: center; font-style: italic; opacity: 0.5; }
+
+        .toggle-board-btn { padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+        .toggle-board-btn.active { background: #00f2fe; color: #000; border-color: #00f2fe; }
+
+        .admin-panel { margin-top: 15px; background: #1a0000; border: 2px solid #ff0000; padding: 12px; border-radius: 12px; width: 100%; }
+        .admin-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 8px; }
+        .admin-btn { padding: 7px; background: #3a0000; color: #ff3333; border: 1px solid #ff0000; cursor: pointer; font-weight: bold; border-radius: 4px; font-size: 0.75rem; }
+        
+        .pass-container { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px; margin-top: 10px; border: 1px solid #9b59b6; }
+        .pass-level { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 8px; margin-bottom: 6px; border-radius: 6px; font-size: 0.85rem; }
+        .arena-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
+        .arena-card { background: rgba(20,20,30,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .settings-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .settings-card { background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+        .settings-card h4 { margin-bottom: 6px; }
+        .settings-card p { font-size: 0.85rem; opacity: 0.78; margin-bottom: 10px; }
+        .settings-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .donate-btn { background: linear-gradient(135deg, #00b894, #00cec9); color: #06110f; }
+        .donate-note { min-height: 18px; font-size: 0.82rem; color: #2ecc71; font-weight: bold; }
+
+        /* ЭКРАН СОЗДАНИЯ АККАУНТА */
+        #auth-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+            display: flex; justify-content: center; align-items: center; z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        /* ЧАСТИЦЫ ПЛАМЕНИ */
+        .flame-particle {
+            position: fixed;
+            pointer-events: none;
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle, #ffeb3b, #ff9800, #f44336);
+            border-radius: 50%;
+            z-index: 10000;
+            animation: flame-rise 0.7s ease-out forwards;
+        }
+        @keyframes flame-rise {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; filter: blur(0px); }
+            100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; filter: blur(2px); }
+        }
+
+        .auth-card {
+            background: var(--panel-bg); padding: 40px; border-radius: 24px;
+            border: 1px solid var(--accent); text-align: center; max-width: 400px; width: 90%;
+        }
+        .auth-input { width: 100%; padding: 12px; margin: 20px 0; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; border-radius: 8px; font-size: 1rem; }
+
+        /* АУРА МИЛЛИАРДЕРА (Искры вокруг кнопки) */
+        .sparkle-aura { position: relative; }
+        .sparkle-aura::after {
+            content: ''; position: absolute;
+            top: -15px; left: -15px; right: -15px; bottom: -15px;
+            border-radius: 50%;
+            border: 4px dotted #ffeb3b;
+            box-shadow: 0 0 20px #ff9800, inset 0 0 20px #ff9800;
+            animation: rotateSparks 4s linear infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+        @keyframes rotateSparks {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="auth-overlay">
+        <div class="auth-card">
+            <h1 style="color: var(--accent); margin-bottom: 10px;">GlebClick 2.0</h1>
+            <p>Добро пожаловать в игру! Чтобы начать копить монеты и сохранять прогресс, создайте свой профиль.</p>
+            <input type="text" id="auth-name-input" class="auth-input" placeholder="Ваше имя..." maxlength="15">
+            <input type="password" id="auth-password-input" class="auth-input" placeholder="Пароль..." maxlength="20">
+            <button class="main-btn" style="width: 100%; height: 60px; border-radius: 12px;" onclick="createAccount()">ВОЙТИ / СОЗДАТЬ</button>
+        </div>
+    </div>
+
+    <header>
+        <div>
+            <h2 style="display: flex; align-items: center; gap: 10px;">
+                <span id="pNameDisplay" class="color-default">Игрок</span>
+                <button class="action-btn" style="background:#ba181b; padding:2px 8px; font-size:0.7rem;" onclick="logout()">Выйти</button>
+            </h2>
+            <div id="titleContainer" style="margin-top:4px;">
+                <span style="font-size:0.85rem; opacity:0.8;">Звание: </span><span id="lblTitle" style="color:#f1c40f; font-weight:bold;">Бомж</span>
+            </div>
+        </div>
+        <div class="currency-bar">
+            <span id="lblCoins">0 🪙</span>
+            <span id="lblDiamonds" style="color:#00f2fe;">0 💎</span>
+        </div>
+    </header>
+
+    <div class="game-grid">
+        <div class="panel click-area">
+            <div>
+                <p>Множитель перерождений: <span id="lblRebirthMult" style="color:#2ecc71;">x1.00</span></p>
+                <p>Пассивный доход: +<span id="lblIslandPassive">0</span>/с</p>
+                <p id="lblBotStatus" style="color:#ffb703; font-weight:bold; display:none; margin-top:3px;">🤖 Автокликер: <span id="lblBotTime">0</span>с</p>
+            </div>
+            
+            <button class="main-btn" onclick="performClick(event)">КЛИК!</button>
+            <div style="font-size:0.9rem; opacity:0.8;">За один клик: +<span id="lblClickPower">1</span></div>
+            <div id="clickStatus" style="height:20px; font-weight:bold; color:#00f2fe; margin-top:3px;"></div>
+
+            <div style="margin-top:15px; width:100%; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
+                <label style="font-size:0.8rem; font-weight:bold;">Настройка профиля:</label>
+                <div style="display:flex; gap:5px; margin-top:4px;">
+                    <input type="text" id="inputName" style="flex:1; padding:6px; background:#000; color:#fff; border:1px solid var(--border); border-radius:4px;" placeholder="Новый ник...">
+                    <button class="action-btn" style="padding:6px;" onclick="changeName()">Сменить</button>
+                </div>
+                
+                <label style="font-size:0.8rem; font-weight:bold; display:block; margin-top:8px;">Выбор цвета никнейма:</label>
+                <select id="nameColorSelect" onchange="applyColor()" style="width:100%; margin-top:4px; padding:5px; background:#000; color:#fff; border:1px solid var(--border); border-radius:4px; font-size:0.8rem;">
+                    <option value="default">Обычный цвет</option>
+                </select>
+            </div>
+
+            <div class="admin-panel" id="adminBox" style="display:none;">
+                <h4 style="color:#ff3333; text-align:center; font-size:0.85rem;">🛠️ СЕКРЕТНЫЙ ОВЕРЛОРД-ПУЛЬТ 🛠️</h4>
+                <div class="admin-grid">
+                    <button class="admin-btn" onclick="adminAdd('coins', 100000000000)">+100ККК Монет</button>
+                    <button class="admin-btn" onclick="adminAdd('diamonds', 100000000)">+100КК 💎</button>
+                    <button class="admin-btn" onclick="adminAdd('mult', 50000)">+50к Клик-Мульт</button>
+                    <button class="admin-btn" onclick="adminAdd('titles', 0)">Получить ВСЕ титулы</button>
+                    <button class="admin-btn" onclick="adminAdd('colors', 0)" style="color:#00ffff; border-color:#00ffff;">Открыть ВСЕ цвета</button>
+                    <button class="admin-btn" onclick="adminAdd('pass', 0)">Активация Pro Pass</button>
+                    <button class="admin-btn" onclick="adminAdd('reb', 10)">+10 Ребёртхов</button>
+                    <button class="admin-btn" onclick="toggleShowPasswords()" style="background:#222; color:#fff; border-color:#444;">Показать пароли игроков</button>
+                </div>
+                <div id="adminPasswords" class="pass-container" style="display:none; margin-top:10px;">
+                    <h4 style="color:#ffdddd; margin-bottom:8px;">Пароли зарегистрированных аккаунтов</h4>
+                    <div style="max-height:220px; overflow:auto;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <thead>
+                                <tr style="text-align:left; font-weight:bold;"><th>Имя</th><th>Пароль</th></tr>
+                            </thead>
+                            <tbody id="adminPasswordsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="navigation">
+                <button class="nav-btn active" onclick="switchTab(event, 'tab-main')">Магазин</button>
+                <button class="nav-btn" onclick="switchTab(event, 'tab-arena')" style="color:#ff3333;">⚔️ Квесты Героев</button>
+                <button class="nav-btn" onclick="switchTab(event, 'tab-pass')" style="color:#9b59b6;">Pro Pass</button>
+                <button class="nav-btn" onclick="switchTab(event, 'tab-leaders')" style="color:#f1c40f;">Игроки</button>
+                <button class="nav-btn" onclick="switchTab(event, 'tab-vip')" style="color:#00f2fe;">VIP & Гардероб</button>
+                <button class="nav-btn" onclick="switchTab(event, 'tab-settings')" style="color:#2ecc71;">Настройки</button>
+            </div>
+
+            <div id="tab-main" class="tab-layer active">
+                <div id="mainUpgradesContainer"></div>
+                <div class="card" style="border-color: #ffb703;">
+                    <div>
+                        <h4>Автоматический бот-кликер</h4>
+                        <p style="font-size:0.8rem; opacity:0.7;">30 секунд стабильных кликов каждую секунду</p>
+                    </div>
+                    <button class="action-btn" id="btnBuyBot" style="background:#ffb703; color:#000;" onclick="activateBot()">1,000 🪙</button>
+                </div>
+                <div style="margin-top:15px; padding:12px; background:rgba(0,0,0,0.2); border-radius:10px;">
+                    <h5 style="margin-bottom:5px;">Система промокодов</h5>
+                    <div style="display:flex; gap:5px;">
+                        <input type="text" id="inputPromo" style="flex:1; padding:7px; background:#000; color:#fff; border:1px solid var(--border); border-radius:6px;" placeholder="Введи промокод...">
+                        <button class="action-btn" onclick="claimPromo()">Ввод</button>
+                    </div>
+                    <div id="promoResult" style="font-size:0.8rem; margin-top:4px;"></div>
+                </div>
+            </div>
+
+            <div id="tab-arena" class="tab-layer">
+                <h3>⚔️ Квесты Героев: Охота на Легенд</h3>
+                <p style="font-size:0.85rem; opacity:0.8; margin-bottom:12px;">Победи легендарных ботов, чтобы доказать свою силу!</p>
+                <div class="arena-grid" id="heroQuestsContainer"></div>
+            </div>
+
+            <div id="tab-pass" class="tab-layer">
+                <h3>🏆 Сезонный Pro Pass</h3>
+                <div class="card" style="border:1px solid #9b59b6; background:rgba(155,89,182,0.1);" id="passTicketCard">
+                    <div>
+                        <h4>Активация VIP Статуса Пасса</h4>
+                    </div>
+                    <button class="action-btn" id="btnBuyPassTicket" style="background:#9b59b6;" onclick="buyPassTicket()">200 💎</button>
+                </div>
+                <div class="pass-container" id="passRewardsContainer"></div>
+                <div id="passMarketSection" style="margin-top:20px; border:2px dashed #9b59b6; padding:15px; border-radius:14px; background:rgba(0,0,0,0.4); display:none;">
+                    <h3 style="color:#e0aaff; margin-bottom:5px;">🏪 Секретный Pro Pass Маркет</h3>
+                    <div id="passMarketItemsContainer"></div>
+                </div>
+            </div>
+
+            <div id="tab-leaders" class="tab-layer">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h3>👥 Зарегистрированные игроки</h3>
+                    <div style="display:flex; gap:5px;">
+                        <button id="btnSortCoins" class="toggle-board-btn active" onclick="changeLeaderboardSort('coins')">По Монетам 🪙</button>
+                        <button id="btnSortDiamonds" class="toggle-board-btn" onclick="changeLeaderboardSort('diamonds')">По Алмазам 💎</button>
+                    </div>
+                </div>
+                <div class="leader-table-wrapper">
+                    <table class="leader-table">
+                        <thead>
+                            <tr><th>Место</th><th>Имя / Титул</th><th id="thLeaderScore">Баланс монет</th></tr>
+                        </thead>
+                        <tbody id="leaderboardBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-vip" class="tab-layer">
+                <div class="card">
+                    <div>
+                        <h4>Переплавка монет в слитки</h4>
+                        <p style="font-size:0.8rem; opacity:0.7;">Обмен 50,000 монет на 10 💎</p>
+                    </div>
+                    <button class="action-btn" style="background:#00f2fe; color:#000;" onclick="exchangeMoney()">Обменять</button>
+                </div>
+                <div style="background:rgba(0,0,0,0.3); padding:12px; border-radius:10px; margin-bottom:15px;">
+                    <strong>👑 Гардероб доступных титулов</strong>
+                    <select class="action-btn" id="titleSelect" onchange="equipTitle()" style="width:100%; margin-top:6px; background:#000; color:#fff; border:1px solid var(--border); text-align:left;"></select>
+                </div>
+                <h3 style="color:#f1c40f; margin-bottom:10px;">⭐ Расширенный VIP Ассортимент</h3>
+                <div id="vipUpgradesContainer"></div>
+            </div>
+
+            <div id="tab-settings" class="tab-layer">
+                <h3 style="margin-bottom:12px;">Настройки</h3>
+                <div class="settings-grid">
+                    <div class="settings-card">
+                        <h4>Тема игры</h4>
+                        <p>Смени оформление игры: темная арена или светлый режим.</p>
+                        <div class="settings-actions">
+                            <button class="action-btn" id="btnThemeDark" onclick="setTheme('dark')">Темная</button>
+                            <button class="action-btn" id="btnThemeLight" onclick="setTheme('light')">Светлая</button>
+                        </div>
+                    </div>
+
+                <div class="settings-card">
+                    <h4>Аккаунт</h4>
+                    <p>Сменить текущего игрока или выйти из системы.</p>
+                    <div class="settings-actions">
+                        <button class="action-btn" style="background:#ba181b;" onclick="logout()">Выйти из аккаунта</button>
+                    </div>
+                </div>
+
+                    <div class="settings-card">
+                        <h4>Наш бот</h4>
+                        <p id="settingsBotInfo">Автокликер на 30 секунд. Цена: 1,000 монет.</p>
+                        <div class="settings-actions">
+                            <button class="action-btn" id="btnSettingsBot" style="background:#ffb703; color:#000;" onclick="activateBot()">Купить бота</button>
+                            <span id="settingsBotStatus" style="font-size:0.85rem; color:#ffb703; font-weight:bold;"></span>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <h4>Донат</h4>
+                        <p>Поддержи проект и получи бонус в игре.</p>
+                        <div class="settings-actions">
+                            <button class="action-btn donate-btn" onclick="claimDonateBonus()">Донат</button>
+                            <span id="donateNote" class="donate-note"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ALL_EXISTING_TITLES = [
+            "Бомж", "kirov team 🛠️", "В диспетчерской 🎛️", "Покоритель сырных шариков 🧀",
+            "zxc гуль 🩸", "Больше монет 🪙", "Трогаю траву 🌱", "Всевышний 🪐", "Нынешний король 👑",
+            "Картель 💼", "Абсолютный Чит-Код ⌨️", "Повелитель кумыса 🍼", "Герой Бешбармака 🥩",
+            "Я читер 😈", "Разработчик 🛠️", "Бета-Тестер 🧪", "Магистр Пасса 🔮", "VIP Элита ✨",
+            "Покоритель Сезона 🎖️", "Топ-50 Сервера 🎖️", "Мастер Ранга Топ-25 🏅", "Элита Рейтинга 🏆", 
+            "Элита Сотни 🎖️", "Мастер Клик-Поля 🦾", "Пробивающийся Новичок 🌀",
+            "Шаг до Всевышнего 🌌", "Гроза Топ-10 ⚔️", "Разрушитель Стен 🧱", "Гладиатор Арены 🏟️", 
+            "Мастер Контратак 🌪️", "Охотник за Головами 🎯", "Кибер-Аристократ 🦾", "Аннигилятор Попова 💣", 
+            "Укротитель Читеров 🛠️", "Сокрушитель Всевышнего 🪐", "Абсолютный Бог Клик-Арены 🧬",
+            "Элита Пасса 👑", "Продвинутый Геймер 🎮", "Алмазный Сталкер 💎", "Патент Боевого Пропуска 📜",
+            "деф дееф деф", "фыфыыфы [ы-ы-фы-фыфы]", "миша пивет [миша пока]", "катакбас [кумыс 🍼]", 
+            "ту кон [алее тукон-тукон 📞]", "меллстройность", "котость 🐾", "админ"
+        ];
+
+        const ALL_EXISTING_COLORS = [
+            "default", "yellow", "orange", "neon-red", "acid-green", "cyber-purple", 
+            "yinyang", "catrainbow", "sunset", "emerald", "rgb", "moonlight", "nightrise"
+        ];
+
+        let state = {
+            playerName: "Игрок", password: "", playerColor: "default", coins: 0, diamonds: 0, clickPower: 1, adminMultiplier: 1,
+            rebirths: 0, rebirthPrice: 10000, vipX2Bought: false, islandPassiveIncome: 0, activeTitle: "Бомж",
+            unlockedTitles: ["Бомж"], unlockedColors: ["default"], usedPromos: [], upgrades: [0,0,0,0,0,0],
+            botActive: false, botTime: 0, proPassOwned: false, proPassLevelsClaimed: [], proPassRewardsTaken: [],   
+            vipBoughtItems: [], defeatedBosses: [], leaderboardSortMode: 'coins', donateClaimed: false, accountCreated: false
+        };
+
+        const baseUpgradesConfig = [
+            { id: 0, name: "Клик-Мышь х1", baseCost: 10, costMult: 1.35, power: 1 },
+            { id: 1, name: "Супер Клик х5", baseCost: 150, costMult: 1.4, power: 5 },
+            { id: 2, name: "Макро-Клик х30", baseCost: 1000, costMult: 1.45, power: 30 },
+            { id: 3, name: "Инжектор х200", baseCost: 7500, costMult: 1.5, power: 200 },
+            { id: 4, name: "Квантовый Скрипт", baseCost: 45000, costMult: 1.6, power: 1100 },
+            { id: 5, name: "Мультиверс Сервер", baseCost: 350000, costMult: 1.8, power: 7500 }
+        ];
+
+        const vipConfig = [
+            { id: "vip_x2", name: "Вечный Множитель x2", desc: "Удваивает силу клика", cost: 50, type: "x2" },
+            { id: "t_def", name: "Титул 'деф дееф деф'", desc: "Классический дефолт", cost: 15, type: "title", value: "деф дееф деф" },
+            { id: "t_fyfy", name: "Титул 'фыфыыфы'", desc: "С припиской [ы-ы-фы-фыфы]", cost: 25, type: "title", value: "фыфыыфы [ы-ы-фы-фыфы]" },
+            { id: "t_misha_pivet", name: "Титул 'миша пивет' (Инь-Янь ☯️)", desc: "С припиской [миша пока]", cost: 50, type: "title_color", value: "миша пивет [миша пока]", colorVal: "yinyang" },
+            { id: "t_katakbas", name: "Титул 'катакбас'", desc: "С припиской [кумыс 🍼]", cost: 35, type: "title", value: "катакбас [кумыс 🍼]" },
+            { id: "t_tukon", name: "Титул 'ту кон'", desc: "С припиской [алее тукон-тукон 📞]", cost: 40, type: "title", value: "ту кон [алее тукон-тукон 📞]" },
+            { id: "t_mell", name: "Титул 'меллстройность'", desc: "Стиль, хайп и золото", cost: 60, type: "title_color", value: "меллстройность", colorVal: "yellow" },
+            { id: "t_cotost", name: "Титул 'котость' (Радуга 🌈)", desc: "Пушистый и РАДУЖНЫЙ!", cost: 77, type: "title_color", value: "котость 🐾", colorVal: "catrainbow" },
+            { id: "c_moonlight", name: "🌙 Цвет 'Лунный Светоч'", desc: "Мистический лунный оттенок", cost: 45, type: "color", value: "moonlight" },
+            { id: "c_nightrise", name: "🌌 Цвет 'Ночной Рассвет'", desc: "Космический фиолетово-розовый", cost: 55, type: "color", value: "nightrise" }
+        ];
+
+        const heroQuestsConfig = [
+            { id: 105, name: "Бот Влад_404", reqPower: 5000, rewardTitle: "Разрушитель Стен 🧱" },
+            { id: 104, name: "misha_popov_zxc", reqPower: 50000, rewardTitle: "Аннигилятор Попова 💣" },
+            { id: 103, name: "Sanya_Cheat", reqPower: 250000, rewardTitle: "Укротитель Читеров 🛠️" },
+            { id: 102, name: "GlebLox 👑", reqPower: 1500000, rewardTitle: "Сокрушитель Всевышнего 🪐" },
+            { id: 101, name: "Kirov 🛠️", reqPower: 10000000, rewardTitle: "Абсолютный Бог Клик-Арены 🧬", finalArena: true }
+        ];
+
+        const passMarketConfig = [
+            { id: "pm_t1", name: "Титул 'Элита Пасса 👑'", cost: 120, type: "title", value: "Элита Пасса 👑" },
+            { id: "pm_t2", name: "Титул 'Продвинутый Геймер 🎮'", cost: 180, type: "title", value: "Продвинутый Геймер 🎮" },
+            { id: "pm_t3", name: "Титул 'Алмазный Сталкер 💎'", cost: 300, type: "title", value: "Алмазный Сталкер 💎" },
+            { id: "pm_c1", name: "🌅 Цвет никнейма 'Закат'", cost: 150, type: "color", value: "sunset" },
+            { id: "pm_c2", name: "🟢 Неоновый Изумруд", cost: 200, type: "color", value: "emerald" }
+        ];
+
+        const passConfig = [
+            { lvl: 1, cost: 500, freeType: "coins", freeVal: 50000, freeName: "+50k Монет", vipType: "diamonds", vipVal: 150, vipName: "+150 💎" },
+            { lvl: 2, cost: 650, freeType: "diamonds", freeVal: 100, freeName: "+100 💎", vipType: "title", vipVal: "Магистр Пасса 🔮", vipName: "Титул 'Магистр Пасса'" },
+            { lvl: 3, cost: 800, freeType: "power", freeVal: 25000, freeName: "+25k к Клику", vipType: "coins", vipVal: 5000000, vipName: "+5,000,000 Монет" },
+            { lvl: 4, cost: 1000, freeType: "coins", freeVal: 20000000, freeName: "+20M Монет", vipType: "title", vipVal: "VIP Элита ✨", vipName: "Титул 'VIP Элита'" },
+            { lvl: 5, cost: 1250, freeType: "title", freeVal: "Покоритель Сезона 🎖️", freeName: "Титул 'Покоритель'", vipType: "rgb_color", vipVal: "rgb", vipName: "🌈 РАДУЖНЫЙ ЦВЕТ НИКА" }
+        ];
+
+        let leaderboardData = [];
+
+        function generateLeaderboardBots() { leaderboardData = []; }
+
+        window.onload = function() {
+            loadState();
+            loadSavedTheme();
+            generateLeaderboardBots();
+            generateMainUpgrades();
+            generateVipUpgrades();
+            renderProPass();
+            renderPassMarket();
+            renderArenaArea();
+            syncDropdownsVisual();
+            applyColor();
+            updateUI();
+            
+            setInterval(() => {
+                let passBonus = state.proPassOwned ? 1.50 : 0.0;
+                let finalMult = 1 + state.rebirths * 0.25 + passBonus;
+                state.coins += state.islandPassiveIncome * finalMult;
+
+                if (state.botActive) {
+                    state.botTime--;
+                    performClick();
+                    if (state.botTime <= 0) {
+                        state.botActive = false;
+                        document.getElementById('lblBotStatus').style.display = 'none';
+                    } else {
+                        document.getElementById('lblBotTime').innerText = state.botTime;
+                    }
+                }
+                updateUI();
+                saveState();
+            }, 1000);
+        };
+
+        function saveState() {
+            try {
+                if (!state || !state.playerName || !state.accountCreated) return;
+                let accounts = JSON.parse(localStorage.getItem('glebclick_accounts') || '[]');
+                let idx = accounts.findIndex(a => a.playerName.toLowerCase() === state.playerName.toLowerCase());
+                
+                if (idx !== -1) {
+                    accounts[idx] = state;
+                } else if (state.accountCreated) {
+                    accounts.push(state);
+                }
+                
+                localStorage.setItem('glebclick_accounts', JSON.stringify(accounts));
+                localStorage.setItem('glebclick_last_session', state.playerName);
+            } catch (e) {
+                console.error("Ошибка сохранения данных:", e);
+            }
+        }
+
+        function createAccount() {
+            let nameInp = document.getElementById('auth-name-input').value.trim();
+            let passInp = document.getElementById('auth-password-input').value.trim();
+
+            if (nameInp.length < 2) {
+                alert("Имя слишком короткое! Пожалуйста, введите хотя бы 2 символа.");
+                return;
+            }
+            if (passInp.length < 3) {
+                alert("Пароль слишком короткий! Минимум 3 символа.");
+                return;
+            }
+
+            let accounts = JSON.parse(localStorage.getItem('glebclick_accounts') || '[]');
+            let existing = accounts.find(a => a.playerName.toLowerCase() === nameInp.toLowerCase());
+
+            if (existing) {
+                if (existing.password === passInp) {
+                    state = existing;
+                } else {
+                    alert("Неверный пароль для этого пользователя!");
+                    return;
+                }
+            } else {
+                state.playerName = nameInp;
+                state.password = passInp;
+                state.accountCreated = true;
+            }
+
+            saveState();
+            let overlay = document.getElementById('auth-overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.visibility = 'hidden';
+                updateUI();
+                applyColor();
+            }, 500);
+        }
+
+        function loadState() {
+            const lastUser = localStorage.getItem('glebclick_last_session');
+            if (lastUser) {
+                let accounts = JSON.parse(localStorage.getItem('glebclick_accounts') || '[]');
+                let found = accounts.find(a => a.playerName === lastUser);
+                
+                if (found) {
+                    state = { ...state, ...found };
+                    if (state.accountCreated) {
+                        document.getElementById('auth-overlay').style.display = 'none';
+                    }
+                    setTimeout(() => {
+                        syncDropdownsVisual();
+                        applyColor();
+                        equipTitle();
+                    }, 100);
+                }
+            }
+        }
+
+        function logout() {
+            if (confirm("Вы действительно хотите выйти из аккаунта? Весь прогресс будет сохранен.")) {
+                saveState();
+                state.accountCreated = false; // Блокируем автосохранение перед перезагрузкой
+                localStorage.removeItem('glebclick_last_session');
+                location.reload();
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('lblCoins').innerText = Math.floor(state.coins).toLocaleString() + " 🪙";
+            document.getElementById('lblDiamonds').innerText = state.diamonds.toLocaleString() + " 💎";
+            
+            let calcClick = 1;
+            for(let i=0; i<baseUpgradesConfig.length; i++) {
+                calcClick += state.upgrades[i] * baseUpgradesConfig[i].power;
+            }
+            if(state.vipX2Bought) calcClick *= 2;
+            state.clickPower = calcClick * state.adminMultiplier;
+
+            let passBonus = state.proPassOwned ? 1.50 : 0.0;
+            let currentMult = 1 + state.rebirths * 0.25 + passBonus;
+
+            document.getElementById('lblClickPower').innerText = Math.floor(state.clickPower * currentMult).toLocaleString();
+            document.getElementById('lblRebirthMult').innerText = "x" + currentMult.toFixed(2);
+            document.getElementById('btnBuyBot').disabled = state.coins < 1000 || state.botActive;
+            syncSettingsPanel();
+
+            // Проверка наличия админ-прав для отображения панели
+            document.getElementById('adminBox').style.display = state.usedPromos.includes('kirovbestadmin') ? "block" : "none";
+
+            // Эффект искр при достижении 1,000,000,000 монет
+            let mainClickBtn = document.querySelector('.click-area .main-btn');
+            if (mainClickBtn) {
+                if (state.coins >= 1000000000) mainClickBtn.classList.add('sparkle-aura');
+                else mainClickBtn.classList.remove('sparkle-aura');
+            }
+            
+            if (state.proPassOwned) {
+                document.getElementById('passTicketCard').style.display = "none";
+                document.getElementById('passMarketSection').style.display = "block";
+            } else {
+                document.getElementById('passTicketCard').style.display = "flex";
+                document.getElementById('passMarketSection').style.display = "none";
+                document.getElementById('btnBuyPassTicket').disabled = state.diamonds < 200;
+            }
+
+            renderMainUpgradesCosts();
+            revalidateVipPassAndArena();
+            renderDynamicLeaderboard();
+        }
+
+        function generateMainUpgrades() {
+            let container = document.getElementById('mainUpgradesContainer');
+            container.innerHTML = "";
+            baseUpgradesConfig.forEach(upg => {
+                container.innerHTML += `
+                    <div class="card">
+                        <div>
+                            <h4>${upg.name}</h4>
+                            <p style="font-size:0.8rem; opacity:0.7;">Сила клика: +${upg.power} | Ур: <span id="lvl_${upg.id}">0</span></p>
+                        </div>
+                        <button class="action-btn" id="btnUpg_${upg.id}" onclick="buyMainUpgrade(${upg.id})"><span id="cost_${upg.id}">0</span></button>
+                    </div>
+                `;
+            });
+        }
+
+        function renderMainUpgradesCosts() {
+            baseUpgradesConfig.forEach(upg => {
+                let lvl = state.upgrades[upg.id];
+                let cost = Math.floor(upg.baseCost * Math.pow(upg.costMult, lvl));
+                document.getElementById(`lvl_${upg.id}`).innerText = lvl;
+                document.getElementById(`cost_${upg.id}`).innerText = cost.toLocaleString() + " 🪙";
+                document.getElementById(`btnUpg_${upg.id}`).disabled = state.coins < cost;
+            });
+        }
+
+        function buyMainUpgrade(id) {
+            let cfg = baseUpgradesConfig[id];
+            let cost = Math.floor(cfg.baseCost * Math.pow(cfg.costMult, state.upgrades[id]));
+            if (state.coins >= cost) {
+                state.coins -= cost; state.upgrades[id]++; updateUI();
+                saveState();
+            }
+        }
+
+        function performClick(e) {
+            let roll = Math.random();
+            let alertEl = document.getElementById('clickStatus');
+            let passBonus = state.proPassOwned ? 1.50 : 0.0;
+            let gained = state.clickPower * (1 + state.rebirths * 0.25 + passBonus);
+            
+            if (state.activeTitle === "админ" && e && e.clientX) {
+                createFlameParticles(e.clientX, e.clientY);
+            }
+
+            if (roll <= 0.1) {
+                gained *= 5; alertEl.innerHTML = "⚡ КРИТ-КЛИК (x5)!";
+            } else { alertEl.innerText = ""; }
+            state.coins += gained;
+            if(!state.botActive) updateUI();
+        }
+
+        function createFlameParticles(x, y) {
+            for (let i = 0; i < 10; i++) {
+                const p = document.createElement('div');
+                p.className = 'flame-particle';
+                p.style.left = x + 'px';
+                p.style.top = y + 'px';
+                p.style.setProperty('--dx', (Math.random() - 0.5) * 150 + 'px');
+                p.style.setProperty('--dy', (Math.random() - 1) * 150 + 'px');
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), 700);
+            }
+        }
+
+        function activateBot() {
+            if (state.coins >= 1000 && !state.botActive) {
+                state.coins -= 1000; state.botActive = true; state.botTime = 30;
+                document.getElementById('lblBotStatus').style.display = 'block';
+                saveState();
+                updateUI();
+            }
+        }
+
+        function renderArenaArea() {
+            let container = document.getElementById('heroQuestsContainer');
+            container.innerHTML = "";
+            heroQuestsConfig.forEach(boss => {
+                container.innerHTML += `
+                    <div class="arena-card" id="arenaCard_${boss.id}">
+                        <div style="display:flex; flex-direction:column;">
+                            <span style="font-weight:bold; color:#ff4d4d;">${boss.name}</span>
+                            <span style="font-size:0.8rem; opacity:0.8;">Требуемый клик: ${boss.reqPower.toLocaleString()}</span>
+                            <span style="font-size:0.75rem; color:#f1c40f; margin-top:2px;">Награда: ${boss.rewardTitle}</span>
+                        </div>
+                        <button class="action-btn" style="background:#ba181b;" id="btnFightBoss_${boss.id}" onclick="fightBoss(${boss.id})">В Бой ⚔️</button>
+                    </div>
+                `;
+            });
+        }
+
+        function fightBoss(id) {
+            let boss = heroQuestsConfig.find(x => x.id === id);
+            if(!boss) return;
+            let passBonus = state.proPassOwned ? 1.50 : 0.0;
+            let totalPlayerPower = state.clickPower * (1 + state.rebirths * 0.25 + passBonus);
+
+            if (totalPlayerPower >= boss.reqPower) {
+                state.defeatedBosses.push(id);
+                unlockTitle(boss.rewardTitle);
+                if(boss.finalArena) {
+                    alert("🎉 Вы победили Основателя Kirov! Квесты героев завершены.");
+                } else {
+                    alert("🔥 Квест выполнен! " + boss.name + " повержен. Получен титул: " + boss.rewardTitle);
+                }
+                saveState();
+                updateUI();
+            } else {
+                alert("❌ Мало силы клика! Требуется: " + boss.reqPower.toLocaleString());
+            }
+        }
+
+        function renderPassMarket() {
+            let container = document.getElementById('passMarketItemsContainer');
+            container.innerHTML = "";
+            passMarketConfig.forEach(item => {
+                container.innerHTML += `
+                    <div class="card" style="border: 1px solid #9b59b6; margin-bottom:6px; padding:8px 12px;">
+                        <span style="font-size:0.85rem; font-weight:bold;">${item.name}</span>
+                        <button class="action-btn" style="background:#9b59b6; padding:4px 10px; font-size:0.8rem;" id="btnBuyPm_${item.id}" onclick="buyPassMarketItem('${item.id}')">${item.cost} 💎</button>
+                    </div>
+                `;
+            });
+        }
+
+        function buyPassMarketItem(id) {
+            let item = passMarketConfig.find(x => x.id === id);
+            if(item && state.diamonds >= item.cost && !state.vipBoughtItems.includes(id)) {
+                state.diamonds -= item.cost;
+                state.vipBoughtItems.push(id);
+                if(item.type === 'title') unlockTitle(item.value);
+                if(item.type === 'color') unlockColor(item.value);
+                saveState();
+                updateUI();
+            }
+        }
+
+        function renderProPass() {
+            let container = document.getElementById('passRewardsContainer');
+            container.innerHTML = "";
+            passConfig.forEach(p => {
+                container.innerHTML += `
+                    <div style="margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-weight:bold; font-size:0.9rem; margin-bottom:5px;">
+                            <span>Уровень ${p.lvl}</span>
+                            <button class="action-btn" style="padding:4px 10px; font-size:0.75rem; background:#3498db;" id="btnUnlockPassLvl_${p.lvl}" onclick="buyPassLevel(${p.lvl})">Купить за ${p.cost} 💎</button>
+                        </div>
+                        <div class="pass-level">
+                            <span style="color:#2ecc71;">🎁 Бесплатная линия: ${p.freeName}</span>
+                            <button class="action-btn" style="padding:3px 8px; font-size:0.7rem;" id="btnClaimFree_${p.lvl}" onclick="claimPassReward(${p.lvl}, 'free')">Забрать</button>
+                        </div>
+                        <div class="pass-level" style="border-left: 3px solid #9b59b6;">
+                            <span style="color:#9b59b6;">⭐ VIP линия: ${p.vipName}</span>
+                            <button class="action-btn" style="padding:3px 8px; font-size:0.7rem; background:#9b59b6;" id="btnClaimVip_${p.lvl}" onclick="claimPassReward(${p.lvl}, 'vip')">Забрать</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function buyPassLevel(lvl) {
+            let cfg = passConfig.find(x => x.lvl === lvl);
+            if(cfg && state.diamonds >= cfg.cost && !state.proPassLevelsClaimed.includes(lvl)) {
+                state.diamonds -= cfg.cost; state.proPassLevelsClaimed.push(lvl); saveState(); updateUI();
+            }
+        }
+
+        function buyPassTicket() {
+            if (state.diamonds >= 200 && !state.proPassOwned) {
+                state.diamonds -= 200; state.proPassOwned = true; 
+                saveState(); updateUI();
+            }
+        }
+
+        function claimPassReward(lvl, type) {
+            let cfg = passConfig.find(x => x.lvl === lvl); if (!cfg) return;
+            let key = `${type}_${lvl}`; if (state.proPassRewardsTaken.includes(key)) return;
+
+            if (type === 'free' && state.proPassLevelsClaimed.includes(lvl)) {
+                state.proPassRewardsTaken.push(key); applyRewardEffect(cfg.freeType, cfg.freeVal);
+            }
+            if (type === 'vip' && state.proPassOwned && state.proPassLevelsClaimed.includes(lvl)) {
+                state.proPassRewardsTaken.push(key); applyRewardEffect(cfg.vipType, cfg.vipVal);
+            }
+            saveState();
+            updateUI();
+        }
+
+        function applyRewardEffect(type, val) {
+            if (type === 'coins') state.coins += val;
+            if (type === 'diamonds') state.diamonds += val;
+            if (type === 'power') state.clickPower += val;
+            if (type === 'title') unlockTitle(val);
+            if (type === 'rgb_color') unlockColor('rgb');
+        }
+
+        function changeLeaderboardSort(mode) {
+            state.leaderboardSortMode = mode;
+            document.getElementById('btnSortCoins').classList.remove('active');
+            document.getElementById('btnSortDiamonds').classList.remove('active');
+            if(mode === 'coins') {
+                document.getElementById('btnSortCoins').classList.add('active');
+                document.getElementById('thLeaderScore').innerText = "Баланс монет";
+            } else {
+                document.getElementById('btnSortDiamonds').classList.add('active');
+                document.getElementById('thLeaderScore').innerText = "Баланс алмазов";
+            }
+            updateUI();
+        }
+
+        // ОПТИМИЗИРОВАННЫЙ ВИРТУАЛЬНЫЙ СУПЕР-РЕНДЕР
+        function renderDynamicLeaderboard() {
+            // Загружаем реальные локальные аккаунты других игроков на этом ПК
+            let localAccounts = JSON.parse(localStorage.getItem('glebclick_accounts') || '[]')
+                .map(a => ({
+                    name: a.playerName, coins: a.coins, diamonds: a.diamonds,
+                    title: a.activeTitle, isPlayer: a.playerName === state.playerName
+                }));
+
+            let competitors = [...localAccounts];
+
+            if (state.leaderboardSortMode === 'coins') {
+                competitors.sort((a, b) => b.coins - a.coins);
+            } else {
+                competitors.sort((a, b) => b.diamonds - a.diamonds);
+            }
+
+            let allCompetitors = competitors;
+
+            // ЧЕСТНЫЙ РАСЧЕТ РАНГА
+            let playerRank = allCompetitors.findIndex(x => x.isPlayer); 
+
+            let tbody = document.getElementById('leaderboardBody'); 
+            
+            let htmlBuffer = "";
+            for (let idx = 0; idx < allCompetitors.length; idx++) {
+                let ld = allCompetitors[idx];
+                htmlBuffer += buildRowHTML(ld, idx + 1);
+            }
+
+            tbody.innerHTML = htmlBuffer;
+        }
+
+        function buildRowHTML(ld, idx) {
+            let rowClass = "";
+            let nameStyle = "";
+            let displayScore = (state.leaderboardSortMode === 'coins') ? 
+                Math.floor(ld.coins).toLocaleString() + " 🪙" : ld.diamonds.toLocaleString() + " 💎";
+
+            if (ld.isPlayer) {
+                rowClass = "player-row";
+                if (state.activeTitle === "админ") {
+                    nameStyle = 'class="color-admin"';
+                } else if (state.playerColor !== 'default') {
+                    nameStyle = `class="color-${state.playerColor}"`;
+                }
+            }
+
+            let placeLabel = `#${idx}`;
+            let currentTitle = ld.isPlayer ? state.activeTitle : ld.title;
+
+            return `
+                <tr class="${rowClass}">
+                    <td><b>${placeLabel}</b></td>
+                    <td><span ${nameStyle}>${ld.name}</span> <br><small style="opacity:0.8; font-weight:bold; color:#f1c40f;">[${currentTitle}]</small></td>
+                    <td>${displayScore}</td>
+                </tr>
+            `;
+        }
+
+        function changeName() {
+            let inp = document.getElementById('inputName').value.trim();
+            if (inp.length > 1 && inp.length < 25) { 
+                state.playerName = inp; applyColor(); updateUI(); 
+            }
+        }
+
+        function unlockColor(c) {
+            if(!state.unlockedColors.includes(c)) { state.unlockedColors.push(c); syncDropdownsVisual(); }
+        }
+
+        function unlockTitle(name) {
+            if (!state.unlockedTitles.includes(name)) { state.unlockedTitles.push(name); syncDropdownsVisual(); }
+        }
+
+        function applyColor() {
+            state.playerColor = document.getElementById('nameColorSelect').value;
+            let el = document.getElementById('pNameDisplay');
+            if (state.activeTitle === "админ") {
+                el.className = 'color-admin';
+            } else {
+                el.className = `color-${state.playerColor}`;
+            }
+            el.innerText = state.playerName;
+        }
+
+        function equipTitle() { 
+            state.activeTitle = document.getElementById('titleSelect').value; 
+            let lbl = document.getElementById('lblTitle');
+            let box = document.getElementById('titleContainer');
+            lbl.innerText = state.activeTitle;
+
+            if (["Разработчик 🛠️", "Бета-Тестер 🧪", "kirov team 🛠️", "Всевышний 🪐", "Сокрушитель Всевышнего 🪐", "Абсолютный Бог Клик-Арены 🧬", "миша пивет [миша пока]", "котость 🐾", "админ"].includes(state.activeTitle)) {
+                box.className = "elite-title-container";
+            } else { box.className = ""; }
+            applyColor();
+            updateUI();
+        }
+
+        function syncDropdownsVisual() {
+            let ts = document.getElementById('titleSelect'); if(!ts) return;
+            let savedTitle = ts.value || state.activeTitle;
+            ts.innerHTML = "";
+            state.unlockedTitles.forEach(t => {
+                let opt = document.createElement('option'); opt.value = t; opt.innerText = t;
+                if(t === savedTitle) opt.selected = true;
+                ts.appendChild(opt);
+            });
+            state.activeTitle = ts.value || "Бомж";
+
+            let cs = document.getElementById('nameColorSelect'); if(!cs) return;
+            let savedColor = cs.value || state.playerColor;
+            cs.innerHTML = "";
+            state.unlockedColors.forEach(c => {
+                let opt = document.createElement('option'); opt.value = c;
+                if(c === 'default') opt.innerText = "Обычный";
+                if(c === 'yellow') opt.innerText = "Золотой Жёлтый";
+                if(c === 'neon-red') opt.innerText = "🚨 Неоново-Красный";
+                if(c === 'cyber-purple') opt.innerText = "🔮 Киберпанк Фиолетовый";
+                if(c === 'sunset') opt.innerText = "🌅 Градиент Заката";
+                if(c === 'emerald') opt.innerText = "🟢 Неоновый Изумруд";
+                if(c === 'yinyang') opt.innerText = "☯️ Инь-Янь Свечение";
+                if(c === 'catrainbow') opt.innerText = "🐾 Кошачий Радужный";
+                if(c === 'rgb') opt.innerText = "🌈 Радужный Перелив";
+                if(c === 'moonlight') opt.innerText = "🌙 Лунный Светоч";
+                if(c === 'nightrise') opt.innerText = "🌌 Ночной Рассвет";
+                if(c === savedColor) opt.selected = true;
+                cs.appendChild(opt);
+            });
+            state.playerColor = cs.value || "default";
+            applyColor();
+        }
+
+        function generateVipUpgrades() {
+            let container = document.getElementById('vipUpgradesContainer'); container.innerHTML = "";
+            vipConfig.forEach(vip => {
+                container.innerHTML += `
+                    <div class="card" style="border: 1px solid #f1c40f;">
+                        <div>
+                            <h4>${vip.name}</h4>
+                            <p style="font-size:0.8rem; opacity:0.7;">${vip.desc}</p>
+                        </div>
+                        <button class="action-btn" id="btnVip_${vip.id}" style="background:#f1c40f; color:#000;" onclick="buyVipItem('${vip.id}')">${vip.cost} 💎</button>
+                    </div>
+                `;
+            });
+        }
+
+        function buyVipItem(id) {
+            let cfg = vipConfig.find(v => v.id === id);
+            if (cfg && state.diamonds >= cfg.cost) {
+                state.diamonds -= cfg.cost; state.vipBoughtItems.push(id);
+                if (cfg.type === "x2") state.vipX2Bought = true;
+                if (cfg.type === "title") unlockTitle(cfg.value);
+                if (cfg.type === "color") unlockColor(cfg.value);
+                if (cfg.type === "title_color") { unlockTitle(cfg.value); unlockColor(cfg.colorVal); }
+                saveState();
+                updateUI();
+            }
+        }
+
+        function revalidateVipPassAndArena() {
+            vipConfig.forEach(vip => {
+                let btn = document.getElementById(`btnVip_${vip.id}`);
+                if (state.vipBoughtItems.includes(vip.id)) { btn.innerText = "Куплено"; btn.disabled = true; } 
+                else btn.disabled = state.diamonds < vip.cost;
+            });
+
+            passMarketConfig.forEach(item => {
+                let btn = document.getElementById(`btnBuyPm_${item.id}`);
+                if(btn) {
+                    if (state.vipBoughtItems.includes(item.id)) { btn.innerText = "Куплено"; btn.disabled = true; }
+                    else btn.disabled = state.diamonds < item.cost;
+                }
+            });
+
+            passConfig.forEach(p => {
+                let btnLvl = document.getElementById(`btnUnlockPassLvl_${p.lvl}`);
+                let btnF = document.getElementById(`btnClaimFree_${p.lvl}`);
+                let btnV = document.getElementById(`btnClaimVip_${p.lvl}`);
+
+                if (state.proPassLevelsClaimed.includes(p.lvl)) { btnLvl.innerText = "Куплен"; btnLvl.disabled = true; } 
+                else { btnLvl.innerText = `Купить за ${p.cost} 💎`; btnLvl.disabled = state.diamonds < p.cost; }
+
+                if (state.proPassRewardsTaken.includes(`free_${p.lvl}`)) { btnF.innerText = "Взято"; btnF.disabled = true; } 
+                else btnF.disabled = !state.proPassLevelsClaimed.includes(p.lvl);
+
+                if (state.proPassRewardsTaken.includes(`vip_${p.lvl}`)) { btnV.innerText = "Взято"; btnV.disabled = true; } 
+                else btnV.disabled = !state.proPassOwned || !state.proPassLevelsClaimed.includes(p.lvl);
+            });
+
+            heroQuestsConfig.forEach(boss => {
+                let btn = document.getElementById(`btnFightBoss_${boss.id}`);
+                if(btn) {
+                    if (state.defeatedBosses.includes(boss.id)) {
+                        btn.innerText = "Побежден 💀"; btn.style.background = "#555"; btn.disabled = true;
+                    } else {
+                        let passBonus = state.proPassOwned ? 1.50 : 0.0;
+                        let currentPower = state.clickPower * (1 + state.rebirths * 0.25 + passBonus);
+                        btn.disabled = currentPower < boss.reqPower;
+                    }
+                }
+            });
+        }
+
+        function exchangeMoney() { 
+            if (state.coins >= 50000) { 
+                state.coins -= 50000; state.diamonds += 10; saveState(); updateUI(); 
+            } }
+
+        function claimPromo() {
+            let input = document.getElementById('inputPromo').value.trim().toLowerCase();
+            let res = document.getElementById('promoResult');
+            if (state.usedPromos.includes(input)) { res.style.color = "#ff4d4d"; res.innerText = "Уже использован!"; return; }
+
+            if (input === 'kirovbestadmin') {
+                state.usedPromos.push('kirovbestadmin'); document.getElementById('adminBox').style.display = "block";
+                res.style.color = "#ff3333"; res.innerText = "Админ-панель активна!"; 
+                unlockTitle("Разработчик 🛠️"); unlockTitle("kirov team 🛠️"); unlockTitle("админ");
+            } else if (input === 'test') {
+                state.usedPromos.push('test'); unlockTitle("Бета-Тестер 🧪");
+                res.style.color = "#2ecc71"; res.innerText = "Титул тестера добавлен.";
+            } else { res.style.color = "#ff4d4d"; res.innerText = "Неверный код!"; }
+            document.getElementById('inputPromo').value = ""; saveState(); updateUI();
+        }
+
+        function adminAdd(type, val) {
+            if(type === 'coins') state.coins += 100000000000;
+            if(type === 'diamonds') state.diamonds += 100000000;
+            if(type === 'mult') state.adminMultiplier += val;
+            if(type === 'reb') state.rebirths += val;
+            if(type === 'pass') {
+                state.proPassOwned = true;
+                passConfig.forEach(p => { if(!state.proPassLevelsClaimed.includes(p.lvl)) state.proPassLevelsClaimed.push(p.lvl); });
+            }
+            if(type === 'titles') { 
+                ALL_EXISTING_TITLES.forEach(titleName => {
+                    if(!state.unlockedTitles.includes(titleName)) state.unlockedTitles.push(titleName);
+                });
+                syncDropdownsVisual();
+            }
+            if(type === 'colors') {
+                ALL_EXISTING_COLORS.forEach(colorName => {
+                    if(!state.unlockedColors.includes(colorName)) state.unlockedColors.push(colorName);
+                });
+                syncDropdownsVisual();
+            }
+            saveState();
+            updateUI();
+        }
+
+        function switchTab(event, tabId) {
+            document.querySelectorAll('.tab-layer').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if (event && event.currentTarget) event.currentTarget.classList.add('active');
+        }
+
+        function setTheme(theme) {
+            if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); }
+            else { document.documentElement.removeAttribute('data-theme'); }
+            localStorage.setItem('glebclick-theme', theme === 'light' ? 'light' : 'dark');
+            updateUI();
+        }
+
+        function loadSavedTheme() {
+            let savedTheme = localStorage.getItem('glebclick-theme');
+            if (savedTheme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        }
+
+        function syncSettingsPanel() {
+            let isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            let darkBtn = document.getElementById('btnThemeDark');
+            let lightBtn = document.getElementById('btnThemeLight');
+            let settingsBotBtn = document.getElementById('btnSettingsBot');
+            let settingsBotStatus = document.getElementById('settingsBotStatus');
+            let donateNote = document.getElementById('donateNote');
+
+            if (darkBtn && lightBtn) {
+                darkBtn.style.background = isLight ? 'var(--btn-bg)' : '#10b981';
+                lightBtn.style.background = isLight ? '#10b981' : 'var(--btn-bg)';
+            }
+
+            if (settingsBotBtn && settingsBotStatus) {
+                settingsBotBtn.disabled = state.coins < 1000 || state.botActive;
+                settingsBotBtn.innerText = state.botActive ? 'Бот работает' : 'Купить бота';
+                settingsBotStatus.innerText = state.botActive ? `Осталось ${state.botTime}с` : '';
+            }
+
+            if (donateNote && state.donateClaimed) {
+                donateNote.innerText = 'Бонус доната получен: +500 алмазов';
+            }
+        }
+
+        function claimDonateBonus() {
+            let donateNote = document.getElementById('donateNote');
+            if (state.donateClaimed) {
+                if (donateNote) donateNote.innerText = 'Бонус уже получен';
+                return;
+            }
+
+            state.diamonds += 500;
+            state.donateClaimed = true;
+            if (donateNote) donateNote.innerText = 'Спасибо за поддержку! +500 алмазов';
+            saveState();
+            updateUI();
+        }
+
+        function toggleShowPasswords() {
+            const box = document.getElementById('adminPasswords');
+            if (!box) return;
+            if (box.style.display === 'none' || box.style.display === '') {
+                renderAdminPasswords();
+                box.style.display = 'block';
+            } else {
+                box.style.display = 'none';
+            }
+        }
+
+        function renderAdminPasswords() {
+            const body = document.getElementById('adminPasswordsBody');
+            if (!body) return;
+            const accounts = JSON.parse(localStorage.getItem('glebclick_accounts') || '[]');
+            if (!accounts || accounts.length === 0) {
+                body.innerHTML = '<tr><td colspan="2" style="opacity:0.8; padding:8px;">Нет зарегистрированных аккаунтов</td></tr>';
+                return;
+            }
+            let html = '';
+            accounts.forEach(a => {
+                const name = a.playerName || '[без имени]';
+                const pwd = a.password || '';
+                html += `<tr><td style="padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.04);">${escapeHtml(name)}</td><td style="padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.04);">${escapeHtml(pwd)}</td></tr>`;
+            });
+            body.innerHTML = html;
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+    </script>
+</body>
+</html>
